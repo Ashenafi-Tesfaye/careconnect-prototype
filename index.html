@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CareConnect Prototype</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="flex flex-col min-h-screen bg-gray-100 text-gray-900">
+
+  <!-- Top Bar -->
+  <header class="flex items-center justify-between bg-indigo-600 text-white p-4">
+    <h1 class="font-semibold">CareConnect</h1>
+    <button id="drawerBtn" class="md:hidden">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"/>
+      </svg>
+    </button>
+  </header>
+
+  <!-- Drawer -->
+  <aside id="drawer"
+         class="fixed inset-y-0 left-0 w-64 bg-white shadow transform -translate-x-full transition-transform md:translate-x-0 z-20">
+    <nav class="mt-8 space-y-1">
+      <a href="#" data-screen="welcome"    class="block px-6 py-3 hover:bg-indigo-50">🏠 Welcome</a>
+      <a href="#" data-screen="auth"       class="block px-6 py-3 hover:bg-indigo-50">🔐 Login / Register</a>
+      <a href="#" data-screen="dashboard"  class="block px-6 py-3 hover:bg-indigo-50">📊 Dashboard</a>
+      <a href="#" data-screen="schedule"   class="block px-6 py-3 hover:bg-indigo-50">🗓️ Schedule</a>
+      <a href="#" data-screen="messaging"  class="block px-6 py-3 hover:bg-indigo-50">💬 Messaging</a>
+      <a href="#" data-screen="sos"        class="block px-6 py-3 hover:bg-red-50">🚨 SOS</a>
+      <a href="#" data-screen="billing"    class="block px-6 py-3 hover:bg-indigo-50">💳 Billing</a>
+      <a href="#" data-screen="analytics"  class="block px-6 py-3 hover:bg-indigo-50">📈 Analytics</a>
+      <a href="#" data-screen="gamify"     class="block px-6 py-3 hover:bg-indigo-50">⭐ Rewards</a>
+      <a href="#" data-screen="stripePayment" class="block px-6 py-3 hover:bg-indigo-50">💳 Payment</a>
+      <a href="#" data-screen="reports"       class="block px-6 py-3 hover:bg-indigo-50">📂 Reports</a>
+      <a href="#" data-screen="mediaUpload"   class="block px-6 py-3 hover:bg-indigo-50">📤 Upload</a>
+      <a href="#" data-screen="wearables"     class="block px-6 py-3 hover:bg-indigo-50">⌚ Devices</a>
+    </nav>
+  </aside>
+  <div id="overlay" class="fixed inset-0 bg-black bg-opacity-30 hidden z-10"></div>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 p-4 pt-20 pb-8 overflow-y-auto md:ml-64">
+
+    <!-- Welcome -->
+    <!-- Welcome -->
+    <section data-screen="welcome" class="flex items-center justify-center bg-gradient-to-r from-indigo-600 to-purple-600 text-white h-full">
+      <div class="max-w-xl text-center space-y-6 p-6 bg-white bg-opacity-10 rounded-xl backdrop-blur-sm">
+        <h2 class="text-4xl font-extrabold">Welcome to CareConnect!</h2>
+        <p class="text-lg">Manage care, schedules and wellness in one beautiful place.</p>
+        <button data-screen-link="auth"
+                class="bg-white text-indigo-600 font-semibold px-6 py-3 rounded-full shadow hover:shadow-lg transition">
+          Get Started
+        </button>
+      </div>
+    </section>
+
+    <!-- Authentication -->
+    <section data-screen="auth" class="screen hidden max-w-sm mx-auto space-y-6">
+      <h2 class="text-xl font-bold text-center">Login</h2>
+      <input id="email" type="email" placeholder="Email" class="w-full border p-3 rounded" />
+      <input id="password" type="password" placeholder="Password" class="w-full border p-3 rounded" />
+      <button id="loginBtn" class="w-full bg-indigo-600 text-white py-3 rounded">Login</button>
+      <p class="text-center text-sm">or</p>
+      <button class="w-full border py-3 rounded flex items-center justify-center gap-2"><img class="w-5" src="https://www.svgrepo.com/show/475656/google-color.svg"/> Continue with Google</button>
+    </section>
+
+    <!-- Dashboard -->
+   <section data-screen="dashboard" class="screen hidden space-y-8">
+  <h2 class="text-2xl font-bold">Today’s Overview</h2>
+
+  <!-- Top cards -->
+  <div class="grid grid-cols-2 gap-4">
+    <!-- … existing cards … -->
+  </div>
+
+  <!-- Charts row -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="bg-white p-4 rounded shadow">
+      <h3 class="text-sm font-medium mb-2">Heart Rate (last hour)</h3>
+      <canvas id="hrChart" height="150"></canvas>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+      <h3 class="text-sm font-medium mb-2">Steps (today)</h3>
+      <canvas id="stepsChart" height="150"></canvas>
+    </div>
+  </div>
+</section>
+
+    <!-- Schedule -->
+    <section data-screen="schedule" class="hidden space-y-4">
+      <h2 class="text-xl font-bold">Today's Schedule</h2>
+      <ul id="taskList" class="space-y-3">
+        <li class="bg-white p-3 rounded shadow flex justify-between items-center"><span>8:00 AM – Medication</span><input type="checkbox"/></li>
+        <li class="bg-white p-3 rounded shadow flex justify-between items-center"><span>12:00 PM – Lunch</span><input type="checkbox"/></li>
+        <li class="bg-white p-3 rounded shadow flex justify-between items-center"><span>3:00 PM – Walk</span><input type="checkbox"/></li>
+      </ul>
+      <button class="bg-emerald-600 text-white w-full py-3 rounded">Add Task</button>
+    </section>
+
+    <!-- Messaging -->
+    <section data-screen="messaging" class="hidden flex flex-col h-[75vh] items-center justify-center space-y-4">
+    <h2 class="text-xl font-bold mb-2">Messages</h2>
+    <div class="flex-1 w-full max-w-md overflow-y-auto bg-white p-4 rounded shadow space-y-2">
+      <!-- messages will appear here -->
+    </div>
+    <p class="text-gray-500">No messages yet. Start a conversation!</p>
+    <div class="flex w-full max-w-md gap-2">
+      <input id="chatInput" class="flex-1 border rounded p-2" placeholder="Type a message" />
+      <button id="sendBtn" class="bg-indigo-600 text-white px-4 rounded hover:bg-indigo-700 transition">Send</button>
+    </div>
+  </section>
+
+    <!-- SOS -->
+    <section data-screen="sos" class="hidden text-center space-y-6">
+      <h2 class="text-xl font-bold text-red-600">Emergency SOS</h2>
+      <p class="text-sm">In an emergency, press and hold the button for 3 seconds.</p>
+      <button id="sosBtn" class="bg-red-600 text-white w-32 h-32 rounded-full mx-auto text-3xl">SOS</button>
+      <p id="sosStatus" class="text-sm"></p>
+    </section>
+
+    <!-- Billing -->
+    <section data-screen="billing" class="screen hidden max-w-md space-y-4">
+      <h2 class="text-xl font-bold">Subscription</h2>
+      <!-- plan cards reused -->
+      <div class="space-y-3">
+        <label class="flex items-center justify-between p-3 border rounded-lg">
+          <span>Standard – $20 / mo</span>
+          <input type="radio" name="subPlan" value="standard" class="form-radio" checked>
+        </label>
+        <label class="flex items-center justify-between p-3 border rounded-lg">
+          <span>Premium – $30 / mo</span>
+          <input type="radio" name="subPlan" value="premium" class="form-radio">
+        </label>
+      </div>
+      <button id="payBtn" class="w-full bg-indigo-600 text-white py-3 rounded">Pay & Activate</button>
+      <p id="billingStatus" class="text-sm text-gray-600"></p>
+    </section>
+
+<!-- ANALYTICS -->
+<section data-screen="analytics" class="hidden space-y-6">
+  <h2 class="text-2xl font-bold">Analytics & Insights</h2>
+  <p class="text-gray-600 max-w-prose">
+    Track your adherence, heart rate trends, and activity summaries over time.
+    Select a range below to update the charts.
+  </p>
+  <div class="flex items-center gap-4">
+    <label class="text-sm font-medium">Time Range:</label>
+    <select id="rangeSelect" class="border rounded p-2 text-sm">
+      <option value="7">Last 7 days</option>
+      <option value="30">Last 30 days</option>
+      <option value="90">Last 90 days</option>
+    </select>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="bg-white p-4 rounded shadow">
+      <h3 class="text-sm font-medium mb-2">Adherence %</h3>
+      <canvas id="adherenceChart" height="150"></canvas>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+      <h3 class="text-sm font-medium mb-2">Average Heart Rate</h3>
+      <canvas id="heartRateChart" height="150"></canvas>
+    </div>
+  </div>
+</section>
+
+
+    <!-- Gamification -->
+    <section data-screen="gamify" class="screen hidden space-y-4">
+      <h2 class="text-xl font-bold">Your Rewards</h2>
+      <div class="bg-white p-4 rounded shadow text-center">
+        <p class="text-sm">Points</p>
+        <p id="points" class="text-3xl font-bold">120</p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <span class="bg-amber-400 text-white px-3 py-1 rounded-full text-sm">⭐ Adherence Streak</span>
+        <span class="bg-emerald-500 text-white px-3 py-1 rounded-full text-sm">🥇 1000 Steps</span>
+      </div>
+    </section>
+    <!-- after your existing sections in <main> -->
+<section data-screen="stripePayment" class="hidden space-y-4">
+  <h2 class="text-xl font-bold">Secure Payment</h2>
+  <p class="text-gray-600">We use Stripe to process your subscription securely.</p>
+  <div class="max-w-md mx-auto bg-white p-6 rounded shadow space-y-4">
+    <!-- Placeholder: replace with actual Stripe Elements -->
+    <img src="https://stripe.com/img/v3/home/twitter.png" alt="Stripe Payment" class="w-full"/>
+    <button class="w-full bg-indigo-600 text-white py-3 rounded hover:bg-indigo-700 transition">
+      Enter Payment Details
+    </button>
+  </div>
+</section>
+
+<section data-screen="reports" class="hidden space-y-4">
+  <h2 class="text-xl font-bold">Export Reports</h2>
+  <div class="overflow-x-auto bg-white rounded shadow">
+    <table class="min-w-full text-sm">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="px-4 py-2 text-left">Date</th>
+          <th class="px-4 py-2 text-left">Tasks Completed</th>
+          <th class="px-4 py-2 text-left">Adherence %</th>
+          <th class="px-4 py-2 text-left">Avg Heart Rate</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- dynamic rows here -->
+        <tr>
+          <td class="border-t px-4 py-2">2025-05-28</td>
+          <td class="border-t px-4 py-2">5</td>
+          <td class="border-t px-4 py-2">82%</td>
+          <td class="border-t px-4 py-2">75 bpm</td>
+        </tr>
+        <!-- … -->
+      </tbody>
+    </table>
+  </div>
+  <div class="flex gap-4">
+    <button class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">
+      Download CSV
+    </button>
+    <button class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">
+      Generate PDF
+    </button>
+  </div>
+</section>
+
+<section data-screen="mediaUpload" class="hidden space-y-4">
+  <h2 class="text-xl font-bold">Media Upload</h2>
+  <input type="file" id="mediaInput" class="block w-full border p-2 rounded" />
+  <button id="uploadBtn" class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 transition">
+    Upload File
+  </button>
+  <p id="uploadStatus" class="text-sm text-gray-600"></p>
+</section>
+
+<section data-screen="wearables" class="hidden space-y-4">
+  <h2 class="text-xl font-bold">Device Integration</h2>
+  <p class="text-gray-600 max-w-prose">
+    Connect your wearable devices to sync vitals automatically. Currently supported:
+    Fitbit, Apple Health, and Google Fit.
+  </p>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <button class="bg-gray-100 border p-4 rounded hover:bg-gray-200 transition flex items-center gap-3">
+      <img src="https://cdn-icons-png.flaticon.com/512/888/888879.png" alt="Fitbit" class="w-8"/>
+      Connect Fitbit
+    </button>
+    <button class="bg-gray-100 border p-4 rounded hover:bg-gray-200 transition flex items-center gap-3">
+      <img src="https://cdn-icons-png.flaticon.com/512/732/732225.png" alt="Apple Health" class="w-8"/>
+      Connect Apple Health
+    </button>
+    <button class="bg-gray-100 border p-4 rounded hover:bg-gray-200 transition flex items-center gap-3">
+      <img src="https://cdn-icons-png.flaticon.com/512/888/888847.png" alt="Google Fit" class="w-8"/>
+      Connect Google Fit
+    </button>
+  </div>
+</section>
+  </main>
+<script>
+  // 1) Chart helpers up front
+  function drawVitals() {
+    const hrCtx  = document.getElementById('hrChart').getContext('2d');
+    const hrData = Array.from({ length: 12 }, () => 60 + Math.random() * 20);
+    new Chart(hrCtx, {
+      type: 'line',
+      data: { labels: hrData.map((_, i) => `${i*5}m`), datasets: [{ label: 'BPM', data: hrData, tension: 0.4, fill: false }] },
+      options: { scales: { y: { min: 40, max: 120 } } }
+    });
+    const stCtx = document.getElementById('stepsChart').getContext('2d');
+    const hours = Array.from({ length: 12 }, (_, i) => `${i+7} AM`);
+    const steps = hours.map(() => Math.floor(Math.random() * 500));
+    new Chart(stCtx, {
+      type: 'bar',
+      data: { labels: hours, datasets: [{ label: 'Steps', data: steps }] },
+      options: { scales: { y: { beginAtZero: true } } }
+    });
+  }
+
+  function drawAnalytics() {
+    const range = +document.getElementById('rangeSelect').value;
+    const days  = Array.from({ length: range }, (_, i) => `Day ${i+1}`);
+    // Adherence %
+    const adhCtx = document.getElementById('adherenceChart').getContext('2d');
+    const adhData= days.map(() => Math.floor(Math.random() * 30) + 70);
+    new Chart(adhCtx, {
+      type: 'line',
+      data: { labels: days, datasets: [{ label: 'Adherence %', data: adhData, fill: true, tension: 0.3 }] },
+      options: { scales: { y: { beginAtZero: true, max: 100 } } }
+    });
+    // Avg Heart Rate
+    const hrCtx  = document.getElementById('heartRateChart').getContext('2d');
+    const hrData = days.map(() => Math.floor(Math.random() * 20) + 60);
+    new Chart(hrCtx, {
+      type: 'bar',
+      data: { labels: days, datasets: [{ label: 'Avg BPM', data: hrData }] },
+      options: { scales: { y: { beginAtZero: true } } }
+    });
+  }
+
+  // 2) DOM ready
+  document.addEventListener('DOMContentLoaded', () => {
+    const drawer    = document.getElementById('drawer');
+    const overlay   = document.getElementById('overlay');
+    const drawerBtn = document.getElementById('drawerBtn');
+    const nav       = document.querySelector('aside nav');
+    const rangeSel  = document.getElementById('rangeSelect');
+
+    // Drawer toggle
+    drawerBtn.addEventListener('click', () => {
+      drawer.classList.toggle('-translate-x-full');
+      overlay.classList.toggle('hidden');
+    });
+    overlay.addEventListener('click', () => {
+      drawer.classList.add('-translate-x-full');
+      overlay.classList.add('hidden');
+    });
+
+    // 3) Nav click → switch screens + draw charts
+    nav.addEventListener('click', e => {
+      const link = e.target.closest('a[data-screen]');
+      if (!link) return;
+      e.preventDefault();
+
+      const id = link.dataset.screen;
+      // hide all
+      document.querySelectorAll('main [data-screen]').forEach(s => s.classList.add('hidden'));
+      // show chosen
+      const sec = document.querySelector(`main [data-screen="${id}"]`);
+      if (sec) {
+        sec.classList.remove('hidden');
+        if (id === 'dashboard')   drawVitals();
+        if (id === 'analytics')   drawAnalytics();
+      }
+      // close drawer on mobile
+      drawer.classList.add('-translate-x-full');
+      overlay.classList.add('hidden');
+    });
+
+    // 4) Range-selector re-draw on change (only if analytics visible)
+    rangeSel.addEventListener('change', () => {
+      const analyticsSec = document.querySelector('main [data-screen="analytics"]');
+      if (analyticsSec && !analyticsSec.classList.contains('hidden')) {
+        drawAnalytics();
+      }
+    });
+
+    // Initial: show Welcome
+    document.querySelector('main [data-screen="welcome"]').classList.remove('hidden');
+  });
+</script>
+
+
+</body>
+</html>
