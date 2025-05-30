@@ -6,6 +6,10 @@
   <title>CareConnect Prototype</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+.metric{background:#fff;border-radius:.5rem;box-shadow:0 1px 3px rgb(0 0 0/.1);padding:1rem;text-align:center}
+.metric span{display:block;font-size:1.5rem;font-weight:700}
+</style>
 </head>
 <body class="flex flex-col min-h-screen bg-gray-100 text-gray-900">
 
@@ -25,10 +29,14 @@
          class="fixed inset-y-0 left-0 w-64 bg-white shadow transform -translate-x-full transition-transform md:translate-x-0 z-20">
     <nav class="mt-8 space-y-1">
       <a href="#" data-screen="welcome"    class="block px-6 py-3 hover:bg-indigo-50">🏠 Welcome</a>
+      <a href="#" data-screen="signup"        class="block px-6 py-3 hover:bg-indigo-50">🆕 Sign Up</a>
+      <a href="#" data-screen="addCaregiver"  class="block px-6 py-3 hover:bg-indigo-50">➕ Add Caregiver</a>
+      <a href="#" data-screen="videoCall"     class="block px-6 py-3 hover:bg-indigo-50">📹 Video Call</a>
       <a href="#" data-screen="auth"       class="block px-6 py-3 hover:bg-indigo-50">🔐 Login / Register</a>
       <a href="#" data-screen="dashboard"  class="block px-6 py-3 hover:bg-indigo-50">📊 Dashboard</a>
       <a href="#" data-screen="schedule"   class="block px-6 py-3 hover:bg-indigo-50">🗓️ Schedule</a>
       <a href="#" data-screen="messaging"  class="block px-6 py-3 hover:bg-indigo-50">💬 Messaging</a>
+      <a href="#" data-screen="aiChat" class="block px-6 py-3 hover:bg-indigo-50">🤖 AI Assistant</a>
       <a href="#" data-screen="sos"        class="block px-6 py-3 hover:bg-red-50">🚨 SOS</a>
       <a href="#" data-screen="billing"    class="block px-6 py-3 hover:bg-indigo-50">💳 Billing</a>
       <a href="#" data-screen="analytics"  class="block px-6 py-3 hover:bg-indigo-50">📈 Analytics</a>
@@ -57,6 +65,57 @@
       </div>
     </section>
 
+<section data-screen="signup" class="hidden max-w-sm mx-auto space-y-6">
+  <h2 class="text-xl font-bold text-center">Create Account</h2>
+  <input id="suName"  type="text"  placeholder="Full Name" class="w-full border p-3 rounded">
+  <input id="suEmail" type="email" placeholder="Email"      class="w-full border p-3 rounded">
+  <input id="suPass"  type="password" placeholder="Password" class="w-full border p-3 rounded">
+  <button id="signupBtn" class="w-full bg-indigo-600 text-white py-3 rounded">Sign Up</button>
+  <p class="text-center text-sm">
+    Have an account?
+    <button data-screen-link="auth" class="text-indigo-600 underline">Log in</button>
+  </p>
+</section>
+
+<section data-screen="addCaregiver" class="hidden max-w-md space-y-6">
+  <h2 class="text-xl font-bold">Link a Caregiver</h2>
+  <input id="cgName" type="text"  placeholder="Caregiver Name"  class="w-full border p-3 rounded">
+  <input id="cgRel"  type="text"  placeholder="Relationship"    class="w-full border p-3 rounded">
+  <input id="cgPhone"type="tel"   placeholder="Phone Number"    class="w-full border p-3 rounded">
+  <button id="linkCgBtn" class="w-full bg-emerald-600 text-white py-3 rounded">Add Caregiver</button>
+  <p id="cgStatus" class="text-sm text-emerald-600 hidden">Caregiver added ✔️</p>
+</section>
+
+<section data-screen="videoCall" class="hidden space-y-4">
+  <h2 class="text-xl font-bold">Live Call</h2>
+  <div class="relative w-full max-w-md mx-auto bg-black rounded overflow-hidden">
+    <video id="localVideo" autoplay muted playsinline class="w-full h-56 object-cover"></video>
+    <video id="remoteVideo" autoplay playsinline
+           class="absolute bottom-2 right-2 w-24 h-24 border-2 border-white rounded-md bg-gray-800"></video>
+  </div>
+  <div class="flex justify-center gap-4">
+    <button id="startCallBtn" class="bg-indigo-600 text-white px-4 py-2 rounded">Start</button>
+    <button id="endCallBtn"   class="bg-red-600 text-white px-4 py-2 rounded" disabled>End</button>
+    <button id="muteBtn"      class="bg-gray-300 text-gray-800 px-4 py-2 rounded" disabled>Mute</button>
+  </div>
+</section>
+
+<section data-screen="aiChat" class="hidden max-w-md mx-auto space-y-4">
+  <h2 class="text-2xl font-bold">AI Assistant</h2>
+
+  <div id="chatbotBox" class="h-72 overflow-y-auto bg-white p-4 rounded shadow space-y-3 text-sm"></div>
+
+  <div class="flex gap-2">
+    <input id="botInput" class="flex-1 border rounded p-2" placeholder="Ask a question…" />
+    <button id="botSend"   class="bg-indigo-600 text-white px-4 rounded">Send</button>
+  </div>
+
+  <button id="botSummary"
+          class="w-full bg-emerald-600 text-white py-2 rounded hover:bg-emerald-700">
+    📊  Generate KPI Summary
+  </button>
+</section>
+
     <!-- Authentication -->
     <section data-screen="auth" class="screen hidden max-w-sm mx-auto space-y-6">
       <h2 class="text-xl font-bold text-center">Login</h2>
@@ -71,10 +130,20 @@
    <section data-screen="dashboard" class="screen hidden space-y-8">
   <h2 class="text-2xl font-bold">Today’s Overview</h2>
 
-  <!-- Top cards -->
-  <div class="grid grid-cols-2 gap-4">
-    <!-- … existing cards … -->
+  <!-- ── KPI CARDS ───────────────────────── -->
+  <div class="metric cursor-pointer transition hover:shadow-lg">
+    Tasks <span id="metricTasks" class="block text-2xl font-bold">3</span>
   </div>
+  <div class="metric cursor-pointer transition hover:shadow-lg">
+    Adherence <span id="metricAdh" class="block text-2xl font-bold">80%</span>
+  </div>
+  <div class="metric cursor-pointer transition hover:shadow-lg">
+    Heart Rate <span id="metricHr" class="block text-2xl font-bold">72 bpm</span>
+  </div>
+  <div class="metric cursor-pointer transition hover:shadow-lg">
+    Steps <span id="metricSteps" class="block text-2xl font-bold">4 510</span>
+  </div>
+
 
   <!-- Charts row -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -137,6 +206,23 @@
       </div>
       <button id="payBtn" class="w-full bg-indigo-600 text-white py-3 rounded">Pay & Activate</button>
       <p id="billingStatus" class="text-sm text-gray-600"></p>
+  <!-- payment-details card -->
+  <div class="max-w-md mx-auto bg-white p-6 rounded shadow space-y-4">
+    <h3 class="text-lg font-bold" id="payPlanLabel">Standard Plan – $20</h3>
+    <!-- Stripe Elements placeholder -->
+    <div class="h-32 flex items-center justify-center border rounded bg-gray-50 text-gray-400">
+      Stripe Placeholder/>
+    </div>
+
+    <button id="stripeConfirmBtn"
+            class="w-full bg-indigo-600 text-white py-3 rounded hover:bg-indigo-700 transition">
+      Confirm Payment
+    </button>
+    <button id="stripeCancelBtn"
+            class="w-full border py-3 rounded text-gray-600">
+      Cancel
+    </button>
+  </div>
     </section>
 
 <!-- ANALYTICS -->
@@ -164,6 +250,14 @@
       <canvas id="heartRateChart" height="150"></canvas>
     </div>
   </div>
+  <div class="flex gap-4">
+  <button id="exportCsvBtn" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">
+    Export CSV
+  </button>
+  <button id="exportPdfBtn" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">
+    Generate PDF
+  </button>
+</div>
 </section>
 
 
@@ -223,17 +317,39 @@
     <button class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">
       Generate PDF
     </button>
+    <button id="reportsBackBtn" class="mt-4 bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">
+  ⬅︎ Back to Analytics
+</button>
   </div>
+
 </section>
 
 <section data-screen="mediaUpload" class="hidden space-y-4">
-  <h2 class="text-xl font-bold">Media Upload</h2>
-  <input type="file" id="mediaInput" class="block w-full border p-2 rounded" />
-  <button id="uploadBtn" class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 transition">
-    Upload File
+  <h2 class="text-xl font-bold">Add Notes / Upload Files</h2>
+
+  <!-- role selector -->
+  <label class="block text-sm font-medium">Uploader Role</label>
+  <select id="uploadRole" class="border rounded p-2 w-full">
+    <option value="patient">Patient</option>
+    <option value="caregiver">Caregiver</option>
+    <option value="medic">Medical Personnel</option>
+  </select>
+
+  <!-- notes -->
+  <textarea id="uploadNote" rows="3" placeholder="Add context or notes..."
+            class="w-full border rounded p-2"></textarea>
+
+  <!-- file -->
+  <input type="file" id="mediaInput" class="w-full border p-2 rounded" />
+
+  <button id="uploadBtn"
+          class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 transition">
+    Upload
   </button>
-  <p id="uploadStatus" class="text-sm text-gray-600"></p>
+
+  <p id="uploadStatus" class="text-sm text-emerald-600 hidden">✔️ Uploaded</p>
 </section>
+
 
 <section data-screen="wearables" class="hidden space-y-4">
   <h2 class="text-xl font-bold">Device Integration</h2>
@@ -348,6 +464,193 @@
     // Initial: show Welcome
     document.querySelector('main [data-screen="welcome"]').classList.remove('hidden');
   });
+  /* ---------- Billing → stripePayment ---------- */
+let selectedPlan = 'standard';
+document.querySelectorAll('input[name="subPlan"]').forEach(r =>
+  r.addEventListener('change', e => selectedPlan = e.target.value)
+);
+document.getElementById('payBtn').addEventListener('click', () => {
+  sessionStorage.setItem('chosenPlan', selectedPlan);
+  // update label inside stripePayment screen
+  document.getElementById('payPlanLabel').textContent =
+    selectedPlan === 'standard' ? 'Standard Plan – $20' : 'Premium Plan – $30';
+  switchScreen('stripePayment');
+});
+
+/* ---------- stripePayment confirm / cancel ---------- */
+const planSummary = document.getElementById('planSummary');        // lives in Billing
+document.getElementById('stripeConfirmBtn').addEventListener('click', e => {
+  e.target.disabled = true; e.target.textContent = 'Processing…';
+  setTimeout(() => {
+    const plan = sessionStorage.getItem('chosenPlan') || 'standard';
+    planSummary.textContent =
+      `Subscription ACTIVE – ${plan.charAt(0).toUpperCase()+plan.slice(1)} Plan`;
+    planSummary.classList.remove('hidden');
+    switchScreen('dashboard');
+  }, 1400);
+});
+document.getElementById('stripeCancelBtn')
+        .addEventListener('click', () => switchScreen('billing'));
+
+        /* ---------- Dashboard → Analytics via KPI click ---------- */
+        document.querySelector('[data-screen="dashboard"]').addEventListener('click', e => {
+          if (e.target.closest('.metric')) switchScreen('analytics');
+        });
+
+        /* ---------- Redraw analytics only if the select exists ---------- */
+        const rangeSel = document.getElementById('rangeSelect');
+        if (rangeSel) {
+          rangeSel.addEventListener('change', () => {
+            const screen = document.querySelector('[data-screen="analytics"]');
+            if (!screen.classList.contains('hidden')) drawAnalytics();
+          });
+        }
+/* -----------------------------------------------------------
+   ANALYTICS → REPORTS  (export buttons)
+------------------------------------------------------------ */
+document.getElementById('exportCsvBtn')
+        .addEventListener('click', () => switchScreen('reports'));
+document.getElementById('exportPdfBtn')
+        .addEventListener('click', () => switchScreen('reports'));
+
+/* -----------------------------------------------------------
+   REPORTS → ANALYTICS back nav
+------------------------------------------------------------ */
+document.getElementById('reportsBackBtn')
+        .addEventListener('click', () => switchScreen('analytics'));
+
+/* -----------------------------------------------------------
+   helper: centralised screen swap
+   (adds/extends existing switchScreen if not present)
+------------------------------------------------------------ */
+function switchScreen(id){
+  document.querySelectorAll('main [data-screen]')
+          .forEach(s=>s.classList.add('hidden'));
+  const sec = document.querySelector(`main [data-screen="${id}"]`);
+  sec.classList.remove('hidden');
+
+  // context-specific draws
+  if(id==='dashboard') drawVitals();
+  if(id==='analytics') drawAnalytics();
+
+  // close drawer for mobile
+  drawer.classList.add('-translate-x-full');
+  overlay.classList.add('hidden');
+}
+
+
+/* ========== KPI CARD  ➜  ANALYTICS ========== */
+document.querySelector('[data-screen=\"dashboard\"]').addEventListener('click', e => {
+  if (e.target.closest('.metric')) switchScreen('analytics');
+});
+
+/* ========== Simple Router for data-screen-link buttons ========== */
+document.querySelectorAll('[data-screen-link]').forEach(btn =>
+  btn.addEventListener('click', () => switchScreen(btn.dataset.screenLink))
+);
+
+/* ---------- Sign-Up Handler ---------- */
+document.getElementById('signupBtn').addEventListener('click', () => {
+  const email = document.getElementById('suEmail').value.trim();
+  const pass  = document.getElementById('suPass').value.trim();
+  if (!email || !pass) return alert('Fill all fields');
+  alert('Account created! Please log in.');       // stub
+  switchScreen('auth');
+});
+
+/* ---------- Add-Caregiver Handler ---------- */
+document.getElementById('linkCgBtn').addEventListener('click', () => {
+  const name = document.getElementById('cgName').value.trim();
+  if (!name) return alert('Enter caregiver name');
+  document.getElementById('cgStatus').classList.remove('hidden');
+  setTimeout(() => switchScreen('dashboard'), 1200);
+});
+
+/* ========== Video Call Stub (WebRTC-lite) ========== */
+let localStream;
+const localVid  = document.getElementById('localVideo');
+const remoteVid = document.getElementById('remoteVideo');
+startCallBtn.addEventListener('click', async () => {
+  localStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
+  localVid.srcObject = localStream;
+  // For demo, mirror local to remote after 1 s
+  setTimeout(()=> remoteVid.srcObject = localStream, 1000);
+
+  startCallBtn.disabled = true;
+  endCallBtn.disabled   = false;
+  muteBtn.disabled      = false;
+});
+endCallBtn.addEventListener('click', () => {
+  localStream.getTracks().forEach(t=>t.stop());
+  localVid.srcObject = remoteVid.srcObject = null;
+  startCallBtn.disabled = false;
+  endCallBtn.disabled   = true;
+  muteBtn.disabled      = true;
+});
+muteBtn.addEventListener('click', () => {
+  const enabled = localStream.getAudioTracks()[0].enabled;
+  localStream.getAudioTracks()[0].enabled = !enabled;
+  muteBtn.textContent = enabled ? 'Unmute' : 'Mute';
+});
+
+/* ========== AI Chatbot Logic (stub) ========== */
+const chatBox = document.getElementById('chatbotBox');
+const botInput = document.getElementById('botInput');
+
+function addMsg(text, side='user'){
+  const div = document.createElement('div');
+  div.className = side==='user' ? 'text-right' : 'text-left text-indigo-700';
+  div.textContent = text;
+  chatBox.appendChild(div); chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function summarizeKpi(){
+  // pull live KPI values from dashboard cards
+  const tasks = document.getElementById('metricTasks')?.textContent || '-';
+  const adh   = document.getElementById('metricAdh')?.textContent   || '-';
+  const hr    = document.getElementById('metricHr') ?.textContent   || '-';
+  const steps = document.getElementById('metricSteps')?.textContent || '-';
+
+  return `Here's your summary: ${tasks} tasks today, adherence at ${adh}, average heart rate ${hr}, and ${steps} steps so far.`;
+}
+
+function generateBotReply(q){
+  q = q.toLowerCase();
+  if(q.includes('summary')||q.includes('kpi')) return summarizeKpi();
+  if(q.includes('plan'))   return 'Your current plan is active and billed monthly.';
+  return 'I’m sorry, I only understand KPI or plan questions in this demo.';
+}
+
+document.getElementById('botSend').addEventListener('click', ()=>{
+  const msg = botInput.value.trim();
+  if(!msg) return;
+  addMsg(msg,'user');
+  botInput.value='';
+  setTimeout(()=> addMsg(generateBotReply(msg),'bot'), 400);
+});
+
+document.getElementById('botSummary').addEventListener('click', ()=>{
+  addMsg(generateBotReply('summary'),'bot');
+});
+
+/* ========== Upload Handler ========== */
+document.getElementById('uploadBtn').addEventListener('click', ()=>{
+  const role = uploadRole.value;
+  const note = uploadNote.value.trim();
+  const file = mediaInput.files[0];
+  if(!file){ alert('Choose a file'); return; }
+
+  // Simulate upload
+  uploadBtn.textContent = 'Uploading…'; uploadBtn.disabled = true;
+  setTimeout(()=>{
+    uploadStatus.textContent = `✔️ ${file.name} uploaded by ${role}`;
+    uploadStatus.classList.remove('hidden');
+    uploadBtn.textContent = 'Upload'; uploadBtn.disabled = false;
+    uploadNote.value=''; mediaInput.value='';
+  },1200);
+});
+
+
 </script>
 
 
