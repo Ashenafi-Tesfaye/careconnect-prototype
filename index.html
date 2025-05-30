@@ -98,6 +98,28 @@
     <button id="endCallBtn"   class="bg-red-600 text-white px-4 py-2 rounded" disabled>End</button>
     <button id="muteBtn"      class="bg-gray-300 text-gray-800 px-4 py-2 rounded" disabled>Mute</button>
   </div>
+  <!-- ── Call Controls ───────────────────────────── -->
+<div class="space-y-4 max-w-md mx-auto">
+  <label class="block text-sm font-medium">Call a Caregiver</label>
+  <select id="caregiverSelect" class="border rounded p-2 w-full"></select>
+
+  <button id="callBtn"
+          class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 transition">
+    📞 Start Call
+  </button>
+</div>
+
+<!-- ── Incoming-Call Overlay (hidden until used) ── -->
+<div id="incomingPanel"
+     class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-30">
+  <div class="bg-white p-6 rounded shadow space-y-4 text-center">
+    <p id="incomingLabel" class="text-lg font-semibold"></p>
+    <div class="flex gap-4 justify-center">
+      <button id="acceptBtn"  class="bg-emerald-600 text-white px-4 py-2 rounded">Accept</button>
+      <button id="declineBtn" class="bg-red-600 text-white px-4 py-2 rounded">Decline</button>
+    </div>
+  </div>
+</div>
 </section>
 
 <section data-screen="aiChat" class="hidden max-w-md mx-auto space-y-4">
@@ -193,37 +215,27 @@
     <!-- Billing -->
     <section data-screen="billing" class="screen hidden max-w-md space-y-4">
       <h2 class="text-xl font-bold">Subscription</h2>
-      <!-- plan cards reused -->
+
+      <!-- plan selector -->
       <div class="space-y-3">
         <label class="flex items-center justify-between p-3 border rounded-lg">
-          <span>Standard – $20 / mo</span>
+          <span>Standard – $20&nbsp;/&nbsp;mo</span>
           <input type="radio" name="subPlan" value="standard" class="form-radio" checked>
         </label>
         <label class="flex items-center justify-between p-3 border rounded-lg">
-          <span>Premium – $30 / mo</span>
+          <span>Premium – $30&nbsp;/&nbsp;mo</span>
           <input type="radio" name="subPlan" value="premium" class="form-radio">
         </label>
       </div>
-      <button id="payBtn" class="w-full bg-indigo-600 text-white py-3 rounded">Pay & Activate</button>
-      <p id="billingStatus" class="text-sm text-gray-600"></p>
-  <!-- payment-details card -->
-  <div class="max-w-md mx-auto bg-white p-6 rounded shadow space-y-4">
-    <h3 class="text-lg font-bold" id="payPlanLabel">Standard Plan – $20</h3>
-    <!-- Stripe Elements placeholder -->
-    <div class="h-32 flex items-center justify-center border rounded bg-gray-50 text-gray-400">
-      Stripe Placeholder/>
-    </div>
 
-    <button id="stripeConfirmBtn"
-            class="w-full bg-indigo-600 text-white py-3 rounded hover:bg-indigo-700 transition">
-      Confirm Payment
-    </button>
-    <button id="stripeCancelBtn"
-            class="w-full border py-3 rounded text-gray-600">
-      Cancel
-    </button>
-  </div>
+      <!-- action & status -->
+      <button id="payBtn" class="w-full bg-indigo-600 text-white py-3 rounded">
+        Pay & Activate
+      </button>
+      <p id="billingStatus" class="text-sm text-gray-600"></p>
+      <p id="planSummary"  class="text-sm font-semibold text-emerald-600 hidden"></p>
     </section>
+
 
 <!-- ANALYTICS -->
 <section data-screen="analytics" class="hidden space-y-6">
@@ -566,33 +578,6 @@ document.getElementById('linkCgBtn').addEventListener('click', () => {
   setTimeout(() => switchScreen('dashboard'), 1200);
 });
 
-/* ========== Video Call Stub (WebRTC-lite) ========== */
-let localStream;
-const localVid  = document.getElementById('localVideo');
-const remoteVid = document.getElementById('remoteVideo');
-startCallBtn.addEventListener('click', async () => {
-  localStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
-  localVid.srcObject = localStream;
-  // For demo, mirror local to remote after 1 s
-  setTimeout(()=> remoteVid.srcObject = localStream, 1000);
-
-  startCallBtn.disabled = true;
-  endCallBtn.disabled   = false;
-  muteBtn.disabled      = false;
-});
-endCallBtn.addEventListener('click', () => {
-  localStream.getTracks().forEach(t=>t.stop());
-  localVid.srcObject = remoteVid.srcObject = null;
-  startCallBtn.disabled = false;
-  endCallBtn.disabled   = true;
-  muteBtn.disabled      = true;
-});
-muteBtn.addEventListener('click', () => {
-  const enabled = localStream.getAudioTracks()[0].enabled;
-  localStream.getAudioTracks()[0].enabled = !enabled;
-  muteBtn.textContent = enabled ? 'Unmute' : 'Mute';
-});
-
 /* ========== AI Chatbot Logic (stub) ========== */
 const chatBox = document.getElementById('chatbotBox');
 const botInput = document.getElementById('botInput');
@@ -650,7 +635,86 @@ document.getElementById('uploadBtn').addEventListener('click', ()=>{
   },1200);
 });
 
+/* ===========================================================
+   Mock Caregiver Directory  (would come from DB in real app)
+=========================================================== */
+const caregivers = [
+  { id: 1,  name: 'Alice — Primary'    , tel: '+15550001' },
+  { id: 2,  name: 'Bob — Backup'       , tel: '+15550002' },
+  { id: 3,  name: 'Dr. Smith — Cardio' , tel: '+15550003' }
+];
 
+/* Populate dropdown once DOM is ready */
+document.addEventListener('DOMContentLoaded', () => {
+  const sel = document.getElementById('caregiverSelect');
+  caregivers.forEach(cg => {
+    const opt = document.createElement('option');
+    opt.value = cg.id; opt.textContent = cg.name;
+    sel.appendChild(opt);
+  });
+});
+
+/* ===== Shared helper to start / stop local preview ========== */
+let localStream;
+async function startPreview(){
+  localStream = await navigator.mediaDevices.getUserMedia({video:true, audio:true});
+  localVideo.srcObject  = localStream;
+  remoteVideo.srcObject = localStream;     // demo mirror
+  startCallBtn.disabled = true;
+  endCallBtn.disabled   = false;
+  muteBtn.disabled      = false;
+}
+function endPreview(){
+  localStream && localStream.getTracks().forEach(t=>t.stop());
+  localVideo.srcObject = remoteVideo.srcObject = null;
+  startCallBtn.disabled = false;
+  endCallBtn.disabled   = true;
+  muteBtn.disabled      = true;
+}
+
+/* ===== Outgoing call via <select> + button ================== */
+document.getElementById('callBtn').addEventListener('click', async e => {
+const btn = e.target; // ← grab button
+const id = +caregiverSelect.value;
+const peer = caregivers.find(c => c.id === id)?.name
+
+  callBtn.textContent = `Calling ${peer}…`;
+  await startPreview();          // simulate instant connect per requirements
+  callBtn.textContent = `Connected to ${peer}`;
+});
+
+/* ===== Existing Start/End buttons may still be used ========= */
+startCallBtn.addEventListener('click', startPreview);
+endCallBtn  .addEventListener('click', endPreview);
+
+/* ===== Mute toggle ========================================= */
+muteBtn.addEventListener('click', () => {
+  const track = localStream?.getAudioTracks()[0];
+  if (!track) return;
+  track.enabled = !track.enabled;
+  muteBtn.textContent = track.enabled ? 'Mute' : 'Unmute';
+});
+
+/* ===========================================================
+   Incoming-call simulation  — for demo / testing
+=========================================================== */
+function showIncoming(cg){
+  incomingLabel.textContent = `${cg.name} is calling…`;
+  incomingPanel.classList.remove('hidden');
+}
+function hideIncoming(){ incomingPanel.classList.add('hidden'); }
+
+acceptBtn .addEventListener('click', async ()=>{ hideIncoming(); await startPreview(); });
+declineBtn.addEventListener('click', hideIncoming);
+
+/* Demo trigger:  random incoming call 5-10 s after opening view */
+document.querySelector('[data-screen="videoCall"]').addEventListener('click', () => {
+  // when user switches here the first time, schedule a fake call once
+  if (!window._incomingDemoAttached){
+    window._incomingDemoAttached = true;
+    setTimeout(()=> showIncoming(caregivers[1]), 5000 + Math.random()*5000);
+  }
+});
 </script>
 
 
